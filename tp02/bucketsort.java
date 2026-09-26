@@ -3,7 +3,7 @@ package tp02;
 import java.util.Scanner;
 import java.io.File;
 
-public class insercao{
+public class bucketsort{
 
     public static class Data{
         private int ano;
@@ -169,58 +169,85 @@ public String format() {
     }
 }
    
-public static void ordenacao(Veiculo[] veiculos, int n) {
-    for (int i = 1; i < n; i++) {
-        Veiculo teste = veiculos[i];
-        int j = i - 1;
-        
-        while (j >= 0) {
-            int comp = veiculos[j].getMarca().compareTo(teste.getMarca());
 
-            if (comp == 0) {
-                comp = veiculos[j].getModelo().compareTo(teste.getModelo());
-            }
-            
-            if (comp > 0) {  
-                veiculos[j + 1] = veiculos[j];
-                j--;
-            } else {
-                break;
-            }
-        }
-        veiculos[j + 1] = teste;
-    }
+public static double chave(Veiculo v) {
+    return v.getCilindrada() / 8.1;
 }
+
+public static void inserir(Veiculo[] balde, int tamanho, Veiculo v) {
+    int i = tamanho - 1;
+
+    while (i >= 0 && chave(balde[i]) > chave(v)) {
+        balde[i + 1] = balde[i];
+        i--;
+    }
+
+    balde[i + 1] = v;
+}
+
+public static Veiculo[] bucketSort(Veiculo[] v, int n) {
+
+    Veiculo[][] baldes = new Veiculo[10][n]; 
+    int[] qtd = new int[10];//qts elementos tem em cada balde
+
+    for (int i = 0; i < n; i++) {
+
+        int indice = (int)(chave(v[i]) * 10);//pq se for 0,5 vai p chave 5
+
+        if (indice >= 10) { //tava dando erro quando era 1 pq ai multiplica p 10 
+            indice = 9;
+        }
+
+        inserir(baldes[indice], qtd[indice], v[i]);
+        qtd[indice]++;
+    }
+
+    Veiculo[] resp = new Veiculo[n];
+    int pos = 0;
+
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < qtd[i]; j++) {
+            resp[pos] = baldes[i][j];
+            pos++;
+        }
+    }
+
+    return resp;
+}
+
     //////////////////////////////////
-public static void main(String[] args) throws Exception {
-    Veiculo[] todosVeiculos = LeitorCsv.ler("/tmp/veiculos.csv");
+public static void main(String[] args) throws Exception{
+
+    Veiculo[] veiculos = LeitorCsv.ler("/tmp/veiculos.csv");
 
     Scanner sc = new Scanner(System.in);
-    Veiculo[] veiculosPesquisa = new Veiculo[670];
-    int x = 0; // count de posicoes validas
-    
+
+    Veiculo[] selecionados = new Veiculo[500];
+    int n = 0;
+
     String linha = sc.nextLine();
 
-    while((linha.equals("-1")) == false) {
+    while ((linha.equals("-1"))== false) {
+
         int id = Integer.parseInt(linha);
 
-        for(int i = 0; i < todosVeiculos.length; i++) {
-            if(todosVeiculos[i] != null && id == todosVeiculos[i].getId()) {
-                veiculosPesquisa[x] = todosVeiculos[i];
-                x++;
+        for (int i = 0; i < veiculos.length; i++) {
+            if (veiculos[i] != null && veiculos[i].getId() == id) {
+                selecionados[n] = veiculos[i];
+                n++;
                 break;
             }
         }
+
         linha = sc.nextLine();
     }
 
-    ordenacao(veiculosPesquisa,x);
+    selecionados = bucketSort(selecionados, n);
 
-    for(int i = 0; i < x; i++) {
-        System.out.println(veiculosPesquisa[i].format());
+    for (int i = 0; i < n; i++) {
+        System.out.println(selecionados[i].format());
     }
 
     sc.close();
 }
 }
-

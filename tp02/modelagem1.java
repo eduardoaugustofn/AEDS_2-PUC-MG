@@ -1,7 +1,9 @@
+package tp02;
+
 import java.util.Scanner;
 import java.io.File;
 
-public class modelagem1 {
+public class modelagem1{
 
     public static class Data{
         private int ano;
@@ -19,6 +21,7 @@ public class modelagem1 {
         }
 
     }
+
 
     public static class Veiculo{
 
@@ -55,12 +58,37 @@ public double getCo2() { return this.co2; }
 public boolean getTurbo() { return this.turbo; }
 public Data getDataRegistro() { return this.dataRegistro; }
 
-    public static Veiculo parseveiculo(String s){
-        String atributos[] = s.split(",");
-        int id = Integer.parseInt(atributos[0]);
-        String marca = atributos[1];
+    public static Veiculo parseVeiculo(String s){ // le uma linha e transforma em veiculo
+        String[] partes = s.split(",");
 
-  }
+            int id = Integer.parseInt(partes[0]);
+            String marca = partes[1];
+            String modelo = partes[2];
+            int ano = Integer.parseInt(partes[3]);
+            String categoria = partes[4];
+            String[] combustivel = partes[5].split(";");
+            int cilindros = Integer.parseInt(partes[6]);
+            double cilindrada = Double.parseDouble(partes[7]);
+            String transmissao = partes[8];
+            String tracao = partes[9];
+            double consumoCidade = Double.parseDouble(partes[10]);
+            double consumoEstrada = Double.parseDouble(partes[11]);
+            double co2 = Double.parseDouble(partes[12]);
+            boolean turbo = Boolean.parseBoolean(partes[13]);
+        
+            String[] dataParts = partes[14].split("-");
+            Data dataRegistro = new Data(
+            Integer.parseInt(dataParts[0]),
+            Integer.parseInt(dataParts[1]),
+            Integer.parseInt(dataParts[2])
+    );
+
+        return new Veiculo(id, marca, modelo, ano, categoria, combustivel, 
+                       cilindros, cilindrada, transmissao, tracao, 
+                       consumoCidade, consumoEstrada, co2, turbo, dataRegistro);
+
+  } // fim do parse
+    
   
 public void setConsumoCidade(double consumoCidade) { this.consumoCidade = consumoCidade; }
 public void setConsumoEstrada(double consumoEstrada) { this.consumoEstrada = consumoEstrada; }
@@ -86,47 +114,16 @@ public Veiculo(int id, String marca, String modelo, int ano, String categoria,
         this.co2 = co2;
         this.turbo = turbo;
         this.dataRegistro = dataRegistro;
-    }
-// fazer o lercsv
+    } 
 
 
-
-public class LeitorCsv{
-    public static Veiculo[] ler(String caminhoarq){
-        Veiculo[] veiculos = new Veiculo[500];
-        File f = new File(caminhoarq);
-        Scanner sc = new Scanner(f);
-
-        while(sc.hasNextLine()){
-            String linha = sc.nextline();
-            String[] partes = linha.split(",");
-            int id = Integer.parseInt(partes[0]);
-            String marca = partes[1];
-            String modelo = partes[2];
-            int ano = Integer.parseInt(partes[3]);
-            String categoria = partes[4];
-            String[] combustivel = partes[5].split(";");
-            int cilindros = Integer.parseInt(partes[6]);
-            double cilindrada = Double.parseDouble(partes[7]);
-            String transmissao = partes[8];
-            String tracao = partes[9];
-            double consumoCidade = Double.parseDouble(partes[10]);
-            double consumoEstrada = Double.parseDouble(partes[11]);
-            double co2 = Double.parseDouble(partes[12]);
-            boolean turbo = Boolean.parseBoolean(partes[13]);
-
-        }
-    }
-}
-
-
-   public String format() {
+public String format() {
             StringBuilder combStr = new StringBuilder("[");
             if (this.combustivel != null) {
                 for (int i = 0; i < this.combustivel.length; i++) {
                     combStr.append(this.combustivel[i]);
                     if (i < this.combustivel.length - 1) {
-                        combStr.append(";");
+                        combStr.append(",");
                     }
                 }
             }
@@ -134,7 +131,7 @@ public class LeitorCsv{
 
  
             return String.format(
-                "[%d ## %s ## %s ## %d ## %s ## %s ## %d ## %s ## %s ## %s ## %s ## %s ## %s ## %b ## %s]",
+                    "[%d ## %s ## %s ## %d ## %s ## %s ## %d ## %s ## %s ## %s ## %.2f ## %.2f ## %s ## %b ## %s]",
                 this.id,
                 this.marca,
                 this.modelo,
@@ -145,27 +142,55 @@ public class LeitorCsv{
                 String.valueOf(this.cilindrada),
                 this.transmissao,
                 this.tracao,
-                String.valueOf(this.consumoCidade),
-                String.valueOf(this.consumoEstrada),
+                this.consumoCidade,
+                this.consumoEstrada,
                 String.valueOf(this.co2),
                 this.turbo,
                 this.dataRegistro != null ? this.dataRegistro.format() : ""
             );
         }
-    }
+    } // fim da classe Veiculo
 
-    //////////////////////////////////
-    public static void main(String[] args){
+    public static class LeitorCsv{
+    public static Veiculo[] ler(String caminhoarq) throws Exception{
+        Veiculo[] veiculos = new Veiculo[500];
+        File f = new File(caminhoarq);
+        Scanner sc = new Scanner(f);
+        int i = 0;
 
-        Scanner sc = new Scanner(System.in);
+        sc.nextLine();
         while(sc.hasNextLine()){
             String linha = sc.nextLine();
+            veiculos[i] = Veiculo.parseVeiculo(linha); 
+            i++;
+        }
+        sc.close();
+        return veiculos;
+    }
+}
+   
 
-            if (linha.equals("FIM")) {
-            break;
+    //////////////////////////////////
+    public static void main(String[] args) throws Exception{
+
+
+        Veiculo[] veiculos = LeitorCsv.ler("/tmp/veiculos.csv");
+
+        Scanner sc = new Scanner(System.in);
+        String linha = sc.nextLine();
+
+        while((linha.equals("-1")) == false){ // a entrada eh os id ate o -1
+        int id = Integer.parseInt(linha);
+
+            for(int j=0;j<veiculos.length;j++){
+                if(id == veiculos[j].getId() && veiculos[j] != null){
+               System.out.println(veiculos[j].format());
+            }
         }
-        
+        linha = sc.nextLine();
+
         }
+
 
         sc.close();
     }
